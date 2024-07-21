@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import List
 
@@ -13,25 +14,30 @@ from schemas import VulnerabilityResponse
 router = APIRouter()
 
 
+async def process_year(year: int):
+    url = f'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.zip'
+    zip_path = f'downloaded/nvdcve-1.1-{year}.json.zip'
+    extract_to = 'extracted_files'
+    json_filename = f'nvdcve-1.1-{year}.json'
+    json_file_path = f'{extract_to}/{json_filename}'
+
+    download_file(url, zip_path)
+    extract_zip(zip_path, extract_to)
+    vulnerabilities = parse_json(json_file_path, 'yearly')
+    for vulnerability in vulnerabilities:
+        await create_or_update_vulnerability(vulnerability)
+
+
 async def update_vulnerabilities(feed_type: str):
-    url, zip_path, extract_to, json_file_path = '', '', 'extracted_files', ''
     if feed_type == 'yearly':
         current_year = datetime.now().year
         start_year = 2002
-        for year in range(current_year, start_year - 1, -1):
-            url = f'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.zip'
-            zip_path = f'downloaded/nvdcve-1.1-{year}.json.zip'
-            json_filename = f'nvdcve-1.1-{year}.json'
-            json_file_path = f'{extract_to}/{json_filename}'
-            download_file(url, zip_path)
-            extract_zip(zip_path, extract_to)
-            vulnerabilities = parse_json(json_file_path, feed_type)
-            for vulnerability in vulnerabilities:
-                await create_or_update_vulnerability(vulnerability)
-
+        tasks = [process_year(year) for year in range(current_year, start_year - 1, -1)]
+        await asyncio.gather(*tasks)
     else:
         url = getattr(settings, f"NVD_{feed_type.upper()}_URL")
         zip_path = f'downloaded/nvdcve-1.1-{feed_type}.json.zip'
+        extract_to = 'extracted_files'
         json_file_path = f'{extract_to}/nvdcve-1.1-{feed_type}.json'
 
         download_file(url, zip_path)
