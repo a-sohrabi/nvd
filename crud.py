@@ -1,7 +1,10 @@
 from typing import List, Optional
 
+import pymongo.errors
+
 from database import vulnerability_collection
-from schemas import VulnerabilityCreate, VulnerabilityResponse
+from logger import logger
+from schemas import VulnerabilityResponse
 
 
 async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:
@@ -10,10 +13,18 @@ async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:
         return VulnerabilityResponse(**document)
 
 
-async def create_vulnerability(vulnerability: VulnerabilityCreate) -> VulnerabilityResponse:
-    result = await vulnerability_collection.insert_one(vulnerability.dict())
-    vulnerability.id = str(result.inserted_id)
-    return vulnerability
+async def create_or_update_vulnerability(vulnerability):
+    try:
+        vulnerability_collection.create_index('cve_id', unique=True)
+        result = await vulnerability_collection.update_one(
+            {"cve_id": vulnerability.cve_id},
+            {"$set": vulnerability.dict()},
+            upsert=True
+        )
+        logger.info(f"Create or Update {vulnerability.cve_id}")
+    except pymongo.errors.DuplicateKeyError as e:
+        return 'duplicate key'
+    return result
 
 
 async def get_all_vulnerabilities() -> List[VulnerabilityResponse]:

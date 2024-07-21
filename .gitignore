@@ -22,11 +22,10 @@ venv
 nvd_venv
 docs.zip
 archive.zip
+data
 
-# vim temporary files
 *~
 .*.sw?
 .cache
 
-# macOS
 .DS_Store

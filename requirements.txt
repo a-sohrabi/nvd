@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+requests
+motor
+python-multipart
+pymongo
+git+https://github.com/ahmetoner/fastapi-offline-swagger-ui
