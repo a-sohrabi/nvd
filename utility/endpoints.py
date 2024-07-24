@@ -4,12 +4,12 @@ from typing import List
 
 from fastapi import APIRouter, BackgroundTasks
 
-from config import settings
-from crud import create_or_update_vulnerability, get_all_vulnerabilities
-from downloader import download_file
-from extractor import extract_zip
-from parser import parse_json
-from schemas import VulnerabilityResponse
+from .config import settings
+from .crud import create_or_update_vulnerability, get_all_vulnerabilities
+from .downloader import download_file
+from .extractor import extract_zip
+from .parser import parse_json
+from .schemas import VulnerabilityResponse
 
 router = APIRouter()
 

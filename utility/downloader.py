@@ -2,8 +2,8 @@ import os
 
 import requests
 
-from error_handler import handle_exception
-from logger import logger
+from .error_handler import handle_exception
+from .logger import logger
 
 
 def download_file(url: str, dest_path: str):

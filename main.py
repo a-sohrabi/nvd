@@ -5,7 +5,7 @@ from fastapi import FastAPI, applications
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 
-import endpoints
+from utility import endpoints
 
 app = FastAPI(openapi_url="/nvd/api/openapi.json",
               docs_url="/nvd/api/docs",

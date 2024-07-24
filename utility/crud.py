@@ -2,9 +2,9 @@ from typing import List, Optional
 
 import pymongo.errors
 
-from database import vulnerability_collection
-from logger import logger
-from schemas import VulnerabilityResponse
+from .database import vulnerability_collection
+from .logger import logger
+from .schemas import VulnerabilityResponse
 
 
 async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:

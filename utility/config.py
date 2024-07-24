@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     NVD_YEARLY_URL: str = 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-2023.json.zip'
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"
 
 
 settings = Settings()

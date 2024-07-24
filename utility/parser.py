@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 from typing import List
 
-from error_handler import handle_exception
-from logger import logger
-from schemas import VulnerabilityCreate
+from .error_handler import handle_exception
+from .logger import logger
+from .schemas import VulnerabilityCreate
 
 
 def parse_json(json_path: str, feed_type: str) -> List[VulnerabilityCreate]:

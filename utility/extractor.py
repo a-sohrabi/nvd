@@ -1,7 +1,7 @@
 import zipfile
 
-from error_handler import handle_exception
-from logger import logger
+from .error_handler import handle_exception
+from .logger import logger
 
 
 def extract_zip(zip_path: str, extract_to: str):
