@@ -6,4 +6,7 @@ requests
 motor
 python-multipart
 pymongo
+confluent-kafka
+httpx
+python-json-logger
 git+https://github.com/ahmetoner/fastapi-offline-swagger-ui
