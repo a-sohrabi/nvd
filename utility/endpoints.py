@@ -16,8 +16,8 @@ router = APIRouter()
 
 async def process_year(year: int):
     url = f'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-{year}.json.zip'
-    zip_path = f'downloaded/nvdcve-1.1-{year}.json.zip'
-    extract_to = 'extracted_files'
+    zip_path = f'{settings.FILES_BASE_DIR}/downloaded/nvdcve-1.1-{year}.json.zip'
+    extract_to = f'{settings.FILES_BASE_DIR}/downloaded/extracted_files'
     json_filename = f'nvdcve-1.1-{year}.json'
     json_file_path = f'{extract_to}/{json_filename}'
 
@@ -36,8 +36,8 @@ async def update_vulnerabilities(feed_type: str):
         await asyncio.gather(*tasks)
     else:
         url = getattr(settings, f"NVD_{feed_type.upper()}_URL")
-        zip_path = f'downloaded/nvdcve-1.1-{feed_type}.json.zip'
-        extract_to = 'extracted_files'
+        zip_path = f'{settings.FILES_BASE_DIR}/downloaded/nvdcve-1.1-{feed_type}.json.zip'
+        extract_to = f'{settings.FILES_BASE_DIR}/downloaded/extracted_files'
         json_file_path = f'{extract_to}/nvdcve-1.1-{feed_type}.json'
 
         download_file(url, zip_path)
