@@ -1,8 +1,11 @@
 from typing import List, Optional
 
-import pymongo.errors
+from pydantic_core._pydantic_core import ValidationError
+from pymongo.errors import BulkWriteError
 
+from .config import settings
 from .database import vulnerability_collection
+from .kafka_producer import producer
 from .logger import logger
 from .schemas import VulnerabilityResponse
 
@@ -14,16 +17,30 @@ async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:
 
 
 async def create_or_update_vulnerability(vulnerability):
+    result = None
     try:
-        vulnerability_collection.create_index('cve_id', unique=True)
         result = await vulnerability_collection.update_one(
             {"cve_id": vulnerability.cve_id},
             {"$set": vulnerability.dict()},
             upsert=True
         )
-        logger.info(f"Create or Update {vulnerability.cve_id}")
-    except pymongo.errors.DuplicateKeyError as e:
-        return 'duplicate key'
+        if result.upserted_id:
+            logger.info(f"Inserted new vulnerability: {vulnerability.cve_id}")
+        else:
+            logger.info(f"Updated vulnerability: {vulnerability.cve_id}")
+
+        try:
+            producer.send(settings.KAFKA_TOPIC, key=str(vulnerability.cve_id), value=vulnerability.json())
+            producer.flush()
+        except Exception as ke:
+            logger.error(f"Producing error {ke}")
+    except ValidationError as e:
+        logger.error(f"Validation error for vulnerability {vulnerability.cve_id}: {e}")
+    except BulkWriteError as bwe:
+        logger.error(f"Bulk write error for vulnerability {vulnerability.cve_id}: {bwe.details}")
+    except Exception as e:
+        logger.error(f"Error updating/creating vulnerability {vulnerability.cve_id}: {e}")
+
     return result
 
 

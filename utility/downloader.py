@@ -2,13 +2,14 @@ import os
 
 import requests
 
+from .config import settings
 from .error_handler import handle_exception
 from .logger import logger
 
 
 def download_file(url: str, dest_path: str):
     try:
-        os.makedirs('downloaded', exist_ok=True)
+        os.makedirs(f'{settings.FILES_BASE_DIR}/downloaded', exist_ok=True)
         response = requests.get(url)
         response.raise_for_status()
         with open(dest_path, 'wb') as file:
