@@ -10,7 +10,7 @@ services:
       - mongodb
     restart: always
     volumes:
-      - ./data/nvd_downloaded:/app/downloaded
+      - ./data/downloaded:/app/data/downloaded
 
   mongodb:
     image: 192.168.13.252:5050/mongo:latest
