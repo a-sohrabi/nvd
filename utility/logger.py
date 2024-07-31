@@ -53,20 +53,13 @@ def setup_logging(loki_url, app_name):
     loki_handler.setLevel(logging.INFO)
     loki_handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.handlers = []  # Clear existing handlers
-    logger.addHandler(loki_handler)
-    return logger
+    logger_ = logging.getLogger()
+    logger_.setLevel(logging.INFO)
+    logger_.handlers = []  # Clear existing handlers
+    logger_.addHandler(loki_handler)
+    return logger_
 
 
-if __name__ == "__main__":
-    loki_url = os.getenv("LOKI_URL")
-    app_name = "nvd_scrapper"
-    logger = setup_logging(loki_url, app_name)
-
-    # Test logging
-    try:
-        logger.info("Test log message")
-    except Exception as e:
-        print(f"Logging setup error: {e}")
+loki_url = os.getenv("LOKI_URL")
+app_name = "nvd_scrapper"
+logger = setup_logging(loki_url, app_name)
