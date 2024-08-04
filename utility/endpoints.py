@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, BackgroundTasks
 
 from .config import settings
-from .crud import create_or_update_vulnerability, get_all_vulnerabilities
+from .crud import create_or_update_vulnerability, get_all_vulnerabilities, reset_stats, get_stats
 from .downloader import download_file
 from .extractor import extract_zip
 from .parser import parse_json
@@ -21,6 +21,7 @@ async def process_year(year: int):
     json_filename = f'nvdcve-1.1-{year}.json'
     json_file_path = f'{extract_to}/{json_filename}'
 
+    await reset_stats()
     download_file(url, zip_path)
     extract_zip(zip_path, extract_to)
     vulnerabilities = parse_json(json_file_path, 'yearly')
@@ -40,6 +41,7 @@ async def update_vulnerabilities(feed_type: str):
         extract_to = f'{settings.FILES_BASE_DIR}/downloaded/extracted_files'
         json_file_path = f'{extract_to}/nvdcve-1.1-{feed_type}.json'
 
+        await reset_stats()
         download_file(url, zip_path)
         extract_zip(zip_path, extract_to)
         vulnerabilities = parse_json(json_file_path, feed_type)
@@ -64,3 +66,8 @@ async def update_recent_and_modified_vulnerabilities(background_tasks: Backgroun
 @router.get("/vulnerabilities", response_model=List[VulnerabilityResponse])
 async def get_all_vulnerabilities_endpoint():
     return await get_all_vulnerabilities()
+
+
+@router.get("/stats")
+async def get_vulnerabilities_stats():
+    return await get_stats()
