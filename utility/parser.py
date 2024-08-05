@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 from .error_handler import handle_exception
@@ -7,7 +8,7 @@ from .logger import logger
 from .schemas import VulnerabilityCreate
 
 
-def parse_json(json_path: str, feed_type: str) -> List[VulnerabilityCreate]:
+def parse_json(json_path: Path, feed_type: str) -> List[VulnerabilityCreate]:
     try:
         with open(json_path, "r") as json_file:
             data = json.load(json_file)

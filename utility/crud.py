@@ -32,10 +32,8 @@ async def create_or_update_vulnerability(vulnerability):
             upsert=True
         )
         if result.upserted_id:
-            logger.info(f"Inserted new vulnerability: {vulnerability.cve_id}")
             stats['inserted'] += 1
         else:
-            logger.info(f"Updated vulnerability: {vulnerability.cve_id}")
             stats['updated'] += 1
 
         try:
@@ -43,6 +41,7 @@ async def create_or_update_vulnerability(vulnerability):
             producer.flush()
         except Exception as ke:
             logger.error(f"Producing error {ke}")
+            stats['error'] += 1
     except ValidationError as e:
         logger.error(f"Validation error for vulnerability {vulnerability.cve_id}: {e}")
         stats['error'] += 1
@@ -54,22 +53,6 @@ async def create_or_update_vulnerability(vulnerability):
         stats['error'] += 1
 
     return result
-
-
-async def get_all_vulnerabilities() -> List[VulnerabilityResponse]:
-    vulnerabilities = []
-    cursor = vulnerability_collection.find({})
-    async for document in cursor:
-        vulnerabilities.append(VulnerabilityResponse(**document))
-    return vulnerabilities
-
-
-async def get_vulnerabilities_by_feed_type(feed_type: str) -> List[VulnerabilityResponse]:
-    vulnerabilities = []
-    cursor = vulnerability_collection.find({"feed_type": feed_type})
-    async for document in cursor:
-        vulnerabilities.append(VulnerabilityResponse(**document))
-    return vulnerabilities
 
 
 async def reset_stats():
