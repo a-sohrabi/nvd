@@ -3,15 +3,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+import aiofiles
+
 from .error_handler import handle_exception
 from .logger import logger
 from .schemas import VulnerabilityCreate
 
 
-def parse_json(json_path: Path, feed_type: str) -> List[VulnerabilityCreate]:
+async def parse_json(json_path: Path, feed_type: str) -> List[VulnerabilityCreate]:
     try:
-        with open(json_path, "r") as json_file:
-            data = json.load(json_file)
+        async with aiofiles.open(json_path, "r") as json_file:
+            data = json.loads(await json_file.read())
 
         vulnerabilities = []
         for item in data["CVE_Items"]:
@@ -23,7 +25,6 @@ def parse_json(json_path: Path, feed_type: str) -> List[VulnerabilityCreate]:
             last_modified_date_str = item["lastModifiedDate"]
 
             published_date = datetime.strptime(published_date_str, "%Y-%m-%dT%H:%MZ")
-
             last_modified_date = datetime.strptime(last_modified_date_str, "%Y-%m-%dT%H:%MZ")
 
             vulnerabilities.append(VulnerabilityCreate(
