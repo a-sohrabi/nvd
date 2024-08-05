@@ -17,13 +17,13 @@ router = APIRouter()
 
 async def download_and_extract(url: str, zip_path: Path, extract_to: Path) -> Path:
     await reset_stats()
-    download_file(url, zip_path)
-    extract_zip(zip_path, extract_to)
+    await download_file(url, zip_path)
+    await extract_zip(zip_path, extract_to)
     return extract_to / zip_path.stem
 
 
 async def process_vulnerabilities(json_file_path: Path, feed_type: str):
-    vulnerabilities = parse_json(json_file_path, feed_type)
+    vulnerabilities = await parse_json(json_file_path, feed_type)
     tasks = [create_or_update_vulnerability(vuln) for vuln in vulnerabilities]
     await asyncio.gather(*tasks)
 
