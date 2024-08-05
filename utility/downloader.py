@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import requests
 
@@ -7,7 +8,7 @@ from .error_handler import handle_exception
 from .logger import logger
 
 
-def download_file(url: str, dest_path: str):
+def download_file(url: str, dest_path: Path):
     try:
         os.makedirs(f'{settings.FILES_BASE_DIR}/downloaded', exist_ok=True)
         response = requests.get(url)
