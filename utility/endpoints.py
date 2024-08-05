@@ -53,14 +53,14 @@ async def update_vulnerabilities(feed_type: str):
 @router.post("/all")
 async def update_all_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "yearly")
-    return 'Started updating all vulnerabilities in the background!'
+    return {"message": 'Started updating all vulnerabilities in the background!'}
 
 
 @router.post("/recent")
 async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "recent")
     background_tasks.add_task(update_vulnerabilities, "modified")
-    return 'Started updating recent and modified vulnerabilities in the background!'
+    return {"message": 'Started updating recent and modified vulnerabilities in the background!'}
 
 
 @router.get("/vulnerabilities", response_model=List[VulnerabilityResponse])
