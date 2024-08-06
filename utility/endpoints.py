@@ -1,16 +1,16 @@
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import List
 
 from fastapi import APIRouter, BackgroundTasks
 
 from .config import settings
 from .crud import create_or_update_vulnerability, reset_stats, get_stats
+from .database import client
 from .downloader import download_file
 from .extractor import extract_zip
+from .logger import logger
 from .parser import parse_json
-from .schemas import VulnerabilityResponse
 
 router = APIRouter()
 
@@ -70,3 +70,13 @@ async def update_recent_and_modified_vulnerabilities(background_tasks: Backgroun
 @router.get("/stats")
 async def get_vulnerabilities_stats():
     return await get_stats()
+
+
+@router.get("/check_health")
+async def check_health():
+    try:
+        client.admin.command('ping')
+    except ConnectionError as e:
+        logger.error(e)
+
+    return {"status": "ok", "mongo": "connected"}
