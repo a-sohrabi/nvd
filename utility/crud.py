@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic_core._pydantic_core import ValidationError
 from pymongo.errors import BulkWriteError
@@ -7,7 +7,7 @@ from .config import settings
 from .database import vulnerability_collection
 from .kafka_producer import producer
 from .logger import logger
-from .schemas import VulnerabilityResponse
+from .schemas import VulnerabilityResponse, VulnerabilityCreate
 
 stats = {
     "inserted": 0,
@@ -22,7 +22,7 @@ async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:
         return VulnerabilityResponse(**document)
 
 
-async def create_or_update_vulnerability(vulnerability):
+async def create_or_update_vulnerability(vulnerability: VulnerabilityCreate):
     global stats
     result = None
     try:
