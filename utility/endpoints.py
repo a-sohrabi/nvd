@@ -6,10 +6,9 @@ from fastapi import APIRouter, BackgroundTasks
 
 from .config import settings
 from .crud import create_or_update_vulnerability, reset_stats, get_stats
-from .database import client
 from .downloader import download_file
 from .extractor import extract_zip
-from .logger import logger
+from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
 from .parser import parse_json
 
 router = APIRouter()
@@ -72,11 +71,19 @@ async def get_vulnerabilities_stats():
     return await get_stats()
 
 
-@router.get("/check_health")
+@router.get("/health_check")
 async def check_health():
-    try:
-        client.admin.command('ping')
-    except ConnectionError as e:
-        logger.error(e)
+    mongo_status = await check_mongo()
+    kafka_status = await check_kafka()
+    nvd_status = await check_url(settings.NVD_MODIFIED_URL)
+    loki_status = await check_loki()
+    internet_status = await check_internet_connection()
 
-    return {"status": "ok", "mongo": "connected"}
+    return {
+        "internet": "connected" if internet_status else "disconnected",
+        "mongo": "connected" if mongo_status else "disconnected",
+        "kafka": "connected" if kafka_status else "disconnected",
+        "nvd_urls": "accessible" if nvd_status else "inaccessible",
+        "loki": "accessible" if loki_status else "inaccessible"
+
+    }
