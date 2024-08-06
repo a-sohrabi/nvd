@@ -1,4 +1,3 @@
-from http.client import HTTPException
 from pathlib import Path
 
 import aiofiles
