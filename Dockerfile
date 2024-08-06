@@ -4,13 +4,13 @@ WORKDIR /app
 
 COPY /pip.conf /etc/pip.conf
 
-COPY requirements.txt /app/
-
 RUN apt update
 
 RUN apt install -y git
 
 RUN pip install --upgrade pip
+
+COPY requirements.txt /app/
 
 RUN pip install -r  requirements.txt
 
