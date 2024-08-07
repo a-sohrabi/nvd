@@ -5,13 +5,16 @@ from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks
 
 from .config import settings
-from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats
+from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
+from .logger import logger
 from .parser import parse_json
 
 router = APIRouter()
+
+VERSION_FILE_PATH = Path(__file__).parent.parent / 'version.txt'
 
 
 async def download_and_extract(url: str, zip_path: Path, extract_to: Path) -> Path:
@@ -88,3 +91,14 @@ async def check_health():
         "loki": "accessible" if loki_status else "inaccessible"
 
     }
+
+
+@router.get("/version")
+async def get_version():
+    try:
+        version = await read_version_file(VERSION_FILE_PATH)
+        return {"version": version}
+    except FileNotFoundError as e:
+        logger.error(e)
+    except Exception as e:
+        logger.error(e)
