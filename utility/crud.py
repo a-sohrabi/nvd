@@ -12,6 +12,7 @@ from .database import vulnerability_collection
 from .kafka_producer import producer
 from .logger import logger
 from .schemas import VulnerabilityResponse, VulnerabilityCreate
+import markdown2
 
 stats = {
     "inserted": 0,
@@ -99,3 +100,9 @@ async def read_version_file(version_file_path: Path) -> str:
     async with aiofiles.open(version_file_path, 'r') as file:
         version = await file.read()
     return version.strip()
+
+
+async def read_markdown_file(markdown_file_path: Path) -> str:
+    async with aiofiles.open(markdown_file_path, 'r') as file:
+        content = await file.read()
+    return content
