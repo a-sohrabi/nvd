@@ -1,7 +1,11 @@
-from typing import Optional
+import time
+from functools import wraps
+from typing import Optional, Callable
 
+from fastapi import Request
 from pydantic_core._pydantic_core import ValidationError
 from pymongo.errors import BulkWriteError
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .config import settings
 from .database import vulnerability_collection
@@ -12,7 +16,9 @@ from .schemas import VulnerabilityResponse, VulnerabilityCreate
 stats = {
     "inserted": 0,
     "updated": 0,
-    "errors": 0
+    "errors": 0,
+    "last_called": None,
+    "durations": None
 }
 
 
@@ -60,9 +66,33 @@ async def reset_stats():
     stats = {
         "inserted": 0,
         "updated": 0,
-        "errors": 0
+        "errors": 0,
+        "last_called": None,
+        "durations": None
     }
 
 
 async def get_stats():
     return stats
+
+
+def record_stats():
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = await func(*args, **kwargs)
+            end_time = time.time()
+            duration = end_time - start_time
+
+            stats["last_called"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+            stats["durations"] = duration
+
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+
