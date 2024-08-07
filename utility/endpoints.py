@@ -2,10 +2,13 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
+import markdown2
 from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import HTMLResponse
 
 from .config import settings
-from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file
+from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file, \
+    read_markdown_file
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
@@ -15,6 +18,7 @@ from .parser import parse_json
 router = APIRouter()
 
 VERSION_FILE_PATH = Path(__file__).parent.parent / 'version.txt'
+README_FILE_PATH = Path(__file__).parent.parent / 'README.md'
 
 
 async def download_and_extract(url: str, zip_path: Path, extract_to: Path) -> Path:
@@ -98,6 +102,19 @@ async def get_version():
     try:
         version = await read_version_file(VERSION_FILE_PATH)
         return {"version": version}
+    except FileNotFoundError as e:
+        logger.error(e)
+    except Exception as e:
+        logger.error(e)
+
+
+@router.get("/readme", response_class=HTMLResponse)
+async def get_readme():
+    try:
+        content = await read_markdown_file(README_FILE_PATH)
+        html_content = markdown2.markdown(content)
+        return HTMLResponse(content=html_content, headers={"Content-Type": "text/markdown; charset=utf-8"},
+                            status_code=200)
     except FileNotFoundError as e:
         logger.error(e)
     except Exception as e:
