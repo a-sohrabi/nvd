@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, BackgroundTasks
 
 from .config import settings
-from .crud import create_or_update_vulnerability, reset_stats, get_stats
+from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
@@ -37,6 +37,7 @@ async def process_year(year: int):
     await process_vulnerabilities(json_file_path, 'yearly')
 
 
+@record_stats()
 async def update_vulnerabilities(feed_type: str):
     base_dir = Path(settings.FILES_BASE_DIR) / 'downloaded'
     extract_to = base_dir / 'extracted_files'
