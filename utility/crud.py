@@ -1,11 +1,11 @@
 import time
 from functools import wraps
-from typing import Optional, Callable
+from pathlib import Path
+from typing import Optional
 
-from fastapi import Request
+import aiofiles
 from pydantic_core._pydantic_core import ValidationError
 from pymongo.errors import BulkWriteError
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from .config import settings
 from .database import vulnerability_collection
@@ -95,4 +95,7 @@ def record_stats():
     return decorator
 
 
-
+async def read_version_file(version_file_path: Path) -> str:
+    async with aiofiles.open(version_file_path, 'r') as file:
+        version = await file.read()
+    return version.strip()
