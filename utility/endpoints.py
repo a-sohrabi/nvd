@@ -61,13 +61,13 @@ async def update_vulnerabilities(feed_type: str):
         await process_vulnerabilities(json_file_path, feed_type)
 
 
-@router.post("/all")
+@router.get("/all")
 async def update_all_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "yearly")
     return {"message": 'Started updating all vulnerabilities in the background!'}
 
 
-@router.post("/recent")
+@router.get("/recent")
 async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "recent")
     background_tasks.add_task(update_vulnerabilities, "modified")
@@ -119,3 +119,5 @@ async def get_readme():
         logger.error(e)
     except Exception as e:
         logger.error(e)
+
+
