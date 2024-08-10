@@ -12,7 +12,6 @@ from .database import vulnerability_collection
 from .kafka_producer import producer
 from .logger import logger
 from .schemas import VulnerabilityResponse, VulnerabilityCreate
-import markdown2
 
 stats = {
     "inserted": 0,
@@ -86,8 +85,18 @@ def record_stats():
             end_time = time.time()
             duration = end_time - start_time
 
+            # Determine appropriate time unit
+            minutes, seconds = divmod(duration, 60)
+            hours, minutes = divmod(minutes, 60)
+
+            human_readable_duration = (
+                f"{hours:.2f} hours" if hours >= 1 else
+                f"{minutes:.2f} minutes" if minutes >= 1 else
+                f"{seconds:.2f} seconds"
+            )
+
             stats["last_called"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
-            stats["durations"] = duration
+            stats["durations"] = human_readable_duration
 
             return result
 
