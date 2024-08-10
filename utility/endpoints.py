@@ -4,11 +4,11 @@ from pathlib import Path
 
 import markdown2
 from fastapi import APIRouter, BackgroundTasks
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from .config import settings
 from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file, \
-    read_markdown_file
+    read_markdown_file, get_vulnerability
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
@@ -121,3 +121,9 @@ async def get_readme():
         logger.error(e)
 
 
+@router.get('/detail/{cve_id}')
+async def get_detail(cve_id: str):
+    cve = await get_vulnerability(cve_id)
+    if not cve:
+        return JSONResponse(status_code=404, content={"message": f'{cve_id} not found'})
+    return cve
