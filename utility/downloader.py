@@ -3,7 +3,7 @@ from pathlib import Path
 import aiofiles
 import aiohttp
 
-from .error_handler import handle_exception
+from .logger import log_error
 
 
 async def download_file(url: str, dest: Path):
@@ -15,4 +15,4 @@ async def download_file(url: str, dest: Path):
                 async with aiofiles.open(dest, 'wb') as f:
                     await f.write(content)
     except aiohttp.ClientError as e:
-        handle_exception(e)
+        log_error(e, {'function': 'download_file', 'context': 'downloading vulnerability file', 'input': [url, dest]})

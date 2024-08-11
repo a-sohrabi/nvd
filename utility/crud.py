@@ -10,7 +10,7 @@ from pymongo.errors import BulkWriteError
 from .config import settings
 from .database import vulnerability_collection
 from .kafka_producer import producer
-from .logger import logger
+from .logger import log_error
 from .schemas import VulnerabilityResponse, VulnerabilityCreate
 
 stats = {
@@ -46,16 +46,16 @@ async def create_or_update_vulnerability(vulnerability: VulnerabilityCreate):
             producer.send(settings.KAFKA_TOPIC, key=str(vulnerability.cve_id), value=vulnerability.json())
             producer.flush()
         except Exception as ke:
-            logger.error(f"Producing error {ke}")
+            log_error(ke, {'function': ' get_version', 'context': 'kafka producing', 'input': vulnerability.dict()})
             stats['error'] += 1
     except ValidationError as e:
-        logger.error(f"Validation error for vulnerability {vulnerability.cve_id}: {e}")
+        log_error(e, {'function': ' get_version', 'context': 'pydantic validation', 'input': vulnerability.dict()})
         stats['error'] += 1
     except BulkWriteError as bwe:
-        logger.error(f"Bulk write error for vulnerability {vulnerability.cve_id}: {bwe.details}")
+        log_error(bwe, {'function': ' get_version', 'context': 'bulk write error', 'input': vulnerability.dict()})
         stats['error'] += 1
     except Exception as e:
-        logger.error(f"Error updating/creating vulnerability {vulnerability.cve_id}: {e}")
+        log_error(e, {'function': ' get_version', 'context': 'other', 'input': vulnerability.dict()})
         stats['error'] += 1
 
     return result
