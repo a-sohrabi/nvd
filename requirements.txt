@@ -12,4 +12,5 @@ python-json-logger
 aiofiles
 aiohttp
 markdown2
+python-json-logger
 git+https://github.com/ahmetoner/fastapi-offline-swagger-ui
