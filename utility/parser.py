@@ -5,8 +5,7 @@ from typing import List
 
 import aiofiles
 
-from .error_handler import handle_exception
-from .logger import logger
+from .logger import logger, log_error
 from .schemas import VulnerabilityCreate
 
 
@@ -40,4 +39,4 @@ async def parse_json(json_path: Path, feed_type: str) -> List[VulnerabilityCreat
         logger.info(f"JSON parsing completed for {feed_type} feed")
         return vulnerabilities
     except Exception as e:
-        handle_exception(e)
+        log_error(e, {'function': 'parse_json', 'context': 'parsing the json of vulnerabilities'})
