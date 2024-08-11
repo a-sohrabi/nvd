@@ -2,17 +2,23 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
+import markdown2
 from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from .config import settings
-from .crud import create_or_update_vulnerability, reset_stats, get_stats
-from .database import client
+from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file, \
+    read_markdown_file, get_vulnerability
 from .downloader import download_file
 from .extractor import extract_zip
-from .logger import logger
+from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
+from .logger import log_error
 from .parser import parse_json
 
 router = APIRouter()
+
+VERSION_FILE_PATH = Path(__file__).parent.parent / 'version.txt'
+README_FILE_PATH = Path(__file__).parent.parent / 'README.md'
 
 
 async def download_and_extract(url: str, zip_path: Path, extract_to: Path) -> Path:
@@ -38,6 +44,7 @@ async def process_year(year: int):
     await process_vulnerabilities(json_file_path, 'yearly')
 
 
+@record_stats()
 async def update_vulnerabilities(feed_type: str):
     base_dir = Path(settings.FILES_BASE_DIR) / 'downloaded'
     extract_to = base_dir / 'extracted_files'
@@ -54,13 +61,13 @@ async def update_vulnerabilities(feed_type: str):
         await process_vulnerabilities(json_file_path, feed_type)
 
 
-@router.post("/all")
+@router.get("/all")
 async def update_all_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "yearly")
     return {"message": 'Started updating all vulnerabilities in the background!'}
 
 
-@router.post("/recent")
+@router.get("/recent")
 async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks):
     background_tasks.add_task(update_vulnerabilities, "recent")
     background_tasks.add_task(update_vulnerabilities, "modified")
@@ -72,11 +79,52 @@ async def get_vulnerabilities_stats():
     return await get_stats()
 
 
-@router.get("/check_health")
+@router.get("/health_check")
 async def check_health():
-    try:
-        client.admin.command('ping')
-    except ConnectionError as e:
-        logger.error(e)
+    mongo_status = await check_mongo()
+    kafka_status = await check_kafka()
+    nvd_status = await check_url(settings.NVD_MODIFIED_URL)
+    loki_status = await check_loki()
+    internet_status = await check_internet_connection()
 
-    return {"status": "ok", "mongo": "connected"}
+    return {
+        "internet": "connected" if internet_status else "disconnected",
+        "mongo": "connected" if mongo_status else "disconnected",
+        "kafka": "connected" if kafka_status else "disconnected",
+        "nvd_urls": "accessible" if nvd_status else "inaccessible",
+        "loki": "accessible" if loki_status else "inaccessible"
+
+    }
+
+
+@router.get("/version")
+async def get_version():
+    try:
+        version = await read_version_file(VERSION_FILE_PATH)
+        return {"version": version}
+    except FileNotFoundError as e:
+        log_error(e, {'function': 'get_version', 'context': 'file not found'})
+    except Exception as e:
+        log_error(e, {'function': 'get_version', 'context': 'other exceptions'})
+
+
+@router.get("/readme", response_class=HTMLResponse)
+async def get_readme():
+    try:
+        content = await read_markdown_file(README_FILE_PATH)
+        html_content = markdown2.markdown(content)
+        return HTMLResponse(content=html_content, headers={"Content-Type": "text/markdown; charset=utf-8"},
+                            status_code=200)
+    except FileNotFoundError as e:
+        log_error(e, {"function": "get_readme", "context": "file not found"})
+        return JSONResponse(status_code=404, content={"message": "File not found"})
+    except Exception as e:
+        log_error(e)
+
+
+@router.get('/detail/{cve_id}')
+async def get_detail(cve_id: str):
+    cve = await get_vulnerability(cve_id)
+    if not cve:
+        return JSONResponse(status_code=404, content={"message": f'{cve_id} not found'})
+    return cve

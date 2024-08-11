@@ -11,6 +11,8 @@ app = FastAPI(openapi_url="/nvd/api/openapi.json",
               docs_url="/nvd/api/docs",
               )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 assets_path = fastapi_offline_swagger_ui.__path__[0]
 if os.path.exists(assets_path + "/swagger-ui.css") and os.path.exists(assets_path + "/swagger-ui-bundle.js"):
     app.mount("/nvd/api/assets", StaticFiles(directory=assets_path), name="static")

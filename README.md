@@ -135,6 +135,6 @@ POST http://localhost:8000/recent
     هر آیتم آسیب‌پذیری به یک تاپیک Kafka با استفاده از kafka_producer.py ارسال می‌شود.
     لاگ‌ها با استفاده از logger.py برای پیگیری پیشرفت و مدیریت خطاها ایجاد می‌شوند.
 
-![Flow image](README.png)
+![Flow image](static/images/README.png)
 
 </div>
