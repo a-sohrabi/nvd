@@ -1,4 +1,5 @@
 import asyncio
+import os
 import zipfile
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from .logger import logger, log_error
 
 async def extract_zip(zip_path: Path, extract_to: Path):
     try:
+        os.makedirs(extract_to, exist_ok=True)
         await asyncio.to_thread(extract_zip_sync, zip_path, extract_to)
         logger.info(f"File extracted to: {extract_to}")
     except Exception as e:
