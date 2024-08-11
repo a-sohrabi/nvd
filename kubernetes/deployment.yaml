@@ -17,11 +17,11 @@ spec:
       imagePullSecrets:
       - name: $SECRET_NAME
       containers:
-          image: $IMAGE_NAME:$IMAGE_TAG
+        - image: $IMAGE_NAME:$IMAGE_TAG
           name: $MICRO_SERVICE
           resources:
             requests:
-              memory: "3000Mi"
+              memory: "300Mi"
               cpu: "800m"
             limits:
               memory: "1000Mi"
