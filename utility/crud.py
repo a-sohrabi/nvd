@@ -81,7 +81,11 @@ def record_stats():
         @wraps(func)
         async def wrapper(*args, **kwargs):
             start_time = time.time()
-            result = await func(*args, **kwargs)
+            try:
+                result = await func(*args, **kwargs)
+            except Exception as e:
+                log_error(e)
+                result = None
             end_time = time.time()
             duration = end_time - start_time
 
