@@ -55,7 +55,7 @@ async def create_or_update_vulnerability(vulnerability: VulnerabilityCreate):
         log_error(bwe, {'function': ' get_version', 'context': 'bulk write error', 'input': vulnerability.dict()})
         stats['error'] += 1
     except Exception as e:
-        log_error(e, {'function': ' get_version', 'context': 'other', 'input': vulnerability.dict()})
+        log_error(e, {'function': ' get_version', 'context': 'other exceptions', 'input': vulnerability.dict()})
         stats['error'] += 1
 
     return result
