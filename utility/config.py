@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     KAFKA_TOPIC: str = os.getenv('KAFKA_TOPIC')
     NVD_YEARLY_URL: str = 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-2023.json.zip'
     FILES_BASE_DIR: str = 'data'
+    LOKI_URL: str = os.getenv('LOKI_URL')
 
     class Config:
         env_file = "../.env"
