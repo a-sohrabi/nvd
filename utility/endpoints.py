@@ -88,12 +88,11 @@ async def check_health():
     internet_status = await check_internet_connection()
 
     return {
-        "internet": "connected" if internet_status else "disconnected",
-        "mongo": "connected" if mongo_status else "disconnected",
-        "kafka": "connected" if kafka_status else "disconnected",
-        "nvd_urls": "accessible" if nvd_status else "inaccessible",
-        "loki": "accessible" if loki_status else "inaccessible"
-
+        "internet": internet_status,
+        "mongo": mongo_status,
+        "kafka": kafka_status,
+        "nvd_url": nvd_status,
+        "loki": loki_status
     }
 
 
