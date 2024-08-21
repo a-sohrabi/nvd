@@ -54,6 +54,7 @@ async def update_vulnerabilities(feed_type: str):
         start_year = 2002
         tasks = [process_year(year) for year in range(current_year, start_year - 1, -1)]
         await asyncio.gather(*tasks)
+
     else:
         url = getattr(settings, f"NVD_{feed_type.upper()}_URL")
         zip_path = base_dir / f'nvdcve-1.1-{feed_type}.json.zip'
@@ -88,12 +89,11 @@ async def check_health():
     internet_status = await check_internet_connection()
 
     return {
-        "internet": "connected" if internet_status else "disconnected",
-        "mongo": "connected" if mongo_status else "disconnected",
-        "kafka": "connected" if kafka_status else "disconnected",
-        "nvd_urls": "accessible" if nvd_status else "inaccessible",
-        "loki": "accessible" if loki_status else "inaccessible"
-
+        "internet": internet_status,
+        "mongo": mongo_status,
+        "kafka": kafka_status,
+        "nvd_url": nvd_status,
+        "loki": loki_status
     }
 
 
