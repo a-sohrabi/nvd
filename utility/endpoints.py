@@ -54,6 +54,7 @@ async def update_vulnerabilities(feed_type: str):
         start_year = 2002
         tasks = [process_year(year) for year in range(current_year, start_year - 1, -1)]
         await asyncio.gather(*tasks)
+
     else:
         url = getattr(settings, f"NVD_{feed_type.upper()}_URL")
         zip_path = base_dir / f'nvdcve-1.1-{feed_type}.json.zip'
