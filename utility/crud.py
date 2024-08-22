@@ -12,7 +12,7 @@ from pymongo.errors import BulkWriteError
 from .config import settings
 from .database import vulnerability_collection
 from .kafka_producer import producer
-from .logger import log_error
+from .logger import logger
 from .schemas import VulnerabilityResponse, VulnerabilityCreate
 
 tehran_tz = pytz.timezone('Asia/Tehran')
@@ -50,16 +50,16 @@ async def create_or_update_vulnerability(vulnerability: VulnerabilityCreate):
             producer.send(settings.KAFKA_TOPIC, key=str(vulnerability.cve_id), value=vulnerability.json())
             producer.flush()
         except Exception as ke:
-            log_error(ke, {'function': ' get_version', 'context': 'kafka producing', 'input': vulnerability.dict()})
+            logger.error(ke)
             stats['error'] += 1
     except ValidationError as e:
-        log_error(e, {'function': ' get_version', 'context': 'pydantic validation', 'input': vulnerability.dict()})
+        logger.error(e)
         stats['error'] += 1
     except BulkWriteError as bwe:
-        log_error(bwe, {'function': ' get_version', 'context': 'bulk write error', 'input': vulnerability.dict()})
+        logger.error(bwe)
         stats['error'] += 1
     except Exception as e:
-        log_error(e, {'function': ' get_version', 'context': 'other exceptions', 'input': vulnerability.dict()})
+        logger.error(e)
         stats['error'] += 1
 
     return result
@@ -88,7 +88,7 @@ def record_stats():
             try:
                 result = await func(*args, **kwargs)
             except Exception as e:
-                log_error(e)
+                logger.error(e)
                 result = None
             end_time = time.time()
             duration = end_time - start_time
