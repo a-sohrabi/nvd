@@ -12,7 +12,7 @@ from .crud import create_or_update_vulnerability, reset_stats, get_stats, record
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
-from .logger import log_error
+from .logger import logger
 from .parser import parse_json
 
 router = APIRouter()
@@ -103,9 +103,9 @@ async def get_version():
         version = await read_version_file(VERSION_FILE_PATH)
         return {"version": version}
     except FileNotFoundError as e:
-        log_error(e, {'function': 'get_version', 'context': 'file not found'})
+        logger.error(e)
     except Exception as e:
-        log_error(e, {'function': 'get_version', 'context': 'other exceptions'})
+        logger.error(e)
 
 
 @router.get("/readme", response_class=HTMLResponse)
@@ -116,10 +116,10 @@ async def get_readme():
         return HTMLResponse(content=html_content, headers={"Content-Type": "text/markdown; charset=utf-8"},
                             status_code=200)
     except FileNotFoundError as e:
-        log_error(e, {"function": "get_readme", "context": "file not found"})
+        logger.error(e)
         return JSONResponse(status_code=404, content={"message": "File not found"})
     except Exception as e:
-        log_error(e)
+        logger.error(e)
 
 
 @router.get('/detail/{cve_id}')
