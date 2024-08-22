@@ -3,7 +3,7 @@ import os
 import zipfile
 from pathlib import Path
 
-from .logger import logger, log_error
+from .logger import logger
 
 
 async def extract_zip(zip_path: Path, extract_to: Path):
@@ -12,7 +12,7 @@ async def extract_zip(zip_path: Path, extract_to: Path):
         await asyncio.to_thread(extract_zip_sync, zip_path, extract_to)
         logger.info(f"File extracted to: {extract_to}")
     except Exception as e:
-        log_error(e, {'function': 'extract_zip', 'context': 'unzipping error'})
+        logger.error(e)
 
 
 def extract_zip_sync(zip_path: Path, extract_to: Path):

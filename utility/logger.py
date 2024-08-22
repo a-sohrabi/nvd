@@ -1,15 +1,14 @@
 import logging
 import os
-import sys
 
 import httpx
-from pythonjsonlogger import jsonlogger
 
 
 class LokiHandler(logging.Handler):
-    def __init__(self, url, tags=None):
+    def __init__(self, url, application, tags=None):
         super().__init__()
         self.url = url
+        self.application = application
         self.tags = tags or {}
 
     def emit(self, record):
@@ -21,11 +20,15 @@ class LokiHandler(logging.Handler):
 
     def send_log(self, log_entry, record):
         headers = {'Content-Type': 'application/json'}
-        combined_tags = {**self.tags, **getattr(record, "tags", {})}
+        tags = {
+            "application": self.application,
+            "logger": record.filename,
+            "severity": record.levelname,
+        }
         payload = {
             "streams": [
                 {
-                    "stream": combined_tags,
+                    "stream": tags,
                     "values": [[str(int(record.created * 1e9)), log_entry]]
                 }
             ]
@@ -43,12 +46,9 @@ class LokiHandler(logging.Handler):
 
 
 def setup_logging(loki_url, app_name):
-    formatter = jsonlogger.JsonFormatter('')
+    formatter = logging.Formatter('%(message)s')
 
-    loki_handler = LokiHandler(
-        url=loki_url,
-        tags={"application": app_name}
-    )
+    loki_handler = LokiHandler(url=loki_url, application=app_name)
     loki_handler.setLevel(logging.INFO)
     loki_handler.setFormatter(formatter)
 
@@ -62,23 +62,3 @@ def setup_logging(loki_url, app_name):
 loki_url = os.getenv("LOKI_URL")
 app_name = "nvd_scrapper"
 logger = setup_logging(loki_url, app_name)
-
-
-def log_error(e: Exception, extra_context: dict = None):
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    file_name = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    line_number = exc_tb.tb_lineno
-
-    log_data = {
-        "file_name": file_name,
-        "line": line_number,
-        "error_message": str(e),
-    }
-
-    if extra_context:
-        log_data.update(extra_context)
-
-    logger.error(
-        f"An error occurred: ",
-        extra={"tags": log_data}
-    )
