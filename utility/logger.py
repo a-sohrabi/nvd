@@ -21,9 +21,9 @@ class LokiHandler(logging.Handler):
     def send_log(self, log_entry, record):
         headers = {'Content-Type': 'application/json'}
         tags = {
-            "application": self.application,
+            "job": self.application,
             "logger": record.filename,
-            "severity": record.levelname,
+            "level": record.levelname,
         }
         payload = {
             "streams": [
