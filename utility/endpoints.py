@@ -7,13 +7,13 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from .config import settings
-from .crud import create_or_update_vulnerability, reset_stats, get_stats, record_stats, read_version_file, \
-    read_markdown_file, get_vulnerability
+from .crud import reset_stats, get_stats, record_stats, read_version_file, \
+    read_markdown_file, get_vulnerability, bulk_create_or_update_vulnerabilities
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
 from .logger import logger
-from .parser import parse_json
+from .parser import parse_json_in_batches
 
 router = APIRouter()
 
@@ -29,9 +29,8 @@ async def download_and_extract(url: str, zip_path: Path, extract_to: Path) -> Pa
 
 
 async def process_vulnerabilities(json_file_path: Path, feed_type: str):
-    vulnerabilities = await parse_json(json_file_path, feed_type)
-    tasks = [create_or_update_vulnerability(vuln) for vuln in vulnerabilities]
-    await asyncio.gather(*tasks)
+    async for vulnerabilities_batch in parse_json_in_batches(json_file_path, feed_type):
+        await bulk_create_or_update_vulnerabilities(vulnerabilities_batch)
 
 
 async def process_year(year: int):
