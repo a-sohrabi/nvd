@@ -2,14 +2,13 @@ import time
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import aiofiles
 import pytz
-from pydantic_core._pydantic_core import ValidationError
+from pymongo import UpdateOne
 from pymongo.errors import BulkWriteError
 
-from .config import settings
 from .database import vulnerability_collection
 from .kafka_producer import producer
 from .logger import logger
@@ -32,37 +31,51 @@ async def get_vulnerability(cve_id: str) -> Optional[VulnerabilityResponse]:
         return VulnerabilityResponse(**document)
 
 
-async def create_or_update_vulnerability(vulnerability: VulnerabilityCreate):
+async def bulk_create_or_update_vulnerabilities(vulnerabilities: List[VulnerabilityCreate]):
     global stats
-    result = None
-    try:
-        result = await vulnerability_collection.update_one(
-            {"cve_id": vulnerability.cve_id},
-            {"$set": vulnerability.dict()},
-            upsert=True
+    operations = []
+    created_vulnerabilities = []
+    updated_vulnerabilities = []
+
+    for vulnerability in vulnerabilities:
+        operations.append(
+            UpdateOne(
+                {"cve_id": vulnerability.cve_id},
+                {"$set": vulnerability.dict()},
+                upsert=True
+            )
         )
-        if result.upserted_id:
-            stats['inserted'] += 1
-        else:
-            stats['updated'] += 1
 
+    if operations:
         try:
-            producer.send(settings.KAFKA_TOPIC, key=str(vulnerability.cve_id), value=vulnerability.json())
-            producer.flush()
-        except Exception as ke:
-            logger.error(ke)
-            stats['error'] += 1
-    except ValidationError as e:
-        logger.error(e)
-        stats['error'] += 1
-    except BulkWriteError as bwe:
-        logger.error(bwe)
-        stats['error'] += 1
-    except Exception as e:
-        logger.error(e)
-        stats['error'] += 1
+            result = await vulnerability_collection.bulk_write(operations)
 
-    return result
+            matched_count = result.matched_count
+            upserted_count = len(result.upserted_ids)
+
+            for i, vulnerability in enumerate(vulnerabilities):
+                if i in result.upserted_ids:
+                    created_vulnerabilities.append(vulnerability)
+                else:
+                    updated_vulnerabilities.append(vulnerability)
+
+            stats['inserted'] += upserted_count
+            stats['updated'] += matched_count
+
+            for vuln in created_vulnerabilities:
+                producer.add_message('nvd_topic.extract.created', key=str(vuln.cve_id), value=vuln.json())
+
+            for vuln in updated_vulnerabilities:
+                producer.add_message('nvd_topic.extract.updated', key=str(vuln.cve_id), value=vuln.json())
+
+            producer.flush()
+
+        except BulkWriteError as bwe:
+            logger.error(f"Bulk write error: {bwe.details}")
+            stats['error'] += 1
+        except Exception as e:
+            logger.error(f"General error during bulk write: {str(e)}")
+            stats['error'] += 1
 
 
 async def reset_stats():
