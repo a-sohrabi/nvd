@@ -2,10 +2,14 @@ from pathlib import Path
 
 import aiofiles
 import aiohttp
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from .logger import logger
 
 
+@retry(wait=wait_exponential(multiplier=1, min=4, max=10),
+       stop=stop_after_attempt(5),
+       retry=retry_if_exception_type(aiohttp.ClientError))
 async def download_file(url: str, dest: Path):
     try:
         async with aiohttp.ClientSession() as session:
