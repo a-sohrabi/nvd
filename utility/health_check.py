@@ -25,7 +25,7 @@ async def check_kafka():
         test_key = "test_key"
         test_value = "test_value"
 
-        producer.send(test_topic, test_key, test_value)
+        producer.add_message(test_topic, test_key, test_value)
         producer.flush()
 
         return True
