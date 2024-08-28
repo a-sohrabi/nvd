@@ -4,7 +4,9 @@ import aiofiles
 import aiohttp
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
-from .logger import logger
+from .logger import LogManager
+
+logger = LogManager('downloader.py')
 
 
 @retry(wait=wait_exponential(multiplier=1, min=4, max=10),
