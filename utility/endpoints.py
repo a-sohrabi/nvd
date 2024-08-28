@@ -12,8 +12,10 @@ from .crud import reset_stats, get_stats, record_stats, read_version_file, \
 from .downloader import download_file
 from .extractor import extract_zip
 from .health_check import check_mongo, check_kafka, check_url, check_internet_connection, check_loki
-from .logger import logger
+from .logger import LogManager
 from .parser import parse_json_in_batches
+
+log_manager = LogManager('endpoints.py')
 
 router = APIRouter()
 
@@ -102,9 +104,9 @@ async def get_version():
         version = await read_version_file(VERSION_FILE_PATH)
         return {"version": version}
     except FileNotFoundError as e:
-        logger.error(e)
+        log_manager.error(e)
     except Exception as e:
-        logger.error(e)
+        log_manager.error(e)
 
 
 @router.get("/readme", response_class=HTMLResponse)
@@ -115,10 +117,10 @@ async def get_readme():
         return HTMLResponse(content=html_content, headers={"Content-Type": "text/markdown; charset=utf-8"},
                             status_code=200)
     except FileNotFoundError as e:
-        logger.error(e)
+        log_manager.error(e)
         return JSONResponse(status_code=404, content={"message": "File not found"})
     except Exception as e:
-        logger.error(e)
+        log_manager.error(e)
 
 
 @router.get('/detail/{cve_id}')
