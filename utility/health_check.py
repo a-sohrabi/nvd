@@ -7,7 +7,9 @@ from httpx import AsyncClient
 from .config import settings
 from .database import client
 from .kafka_producer import producer
-from .logger import logger
+from .logger import LogManager
+
+logger = LogManager('health_check.py')
 
 
 async def check_mongo():
@@ -73,6 +75,5 @@ async def check_internet_connection():
         socket.create_connection(("8.8.8.8", 53), timeout=2)
         return True
     except OSError as e:
-        logger.error(e
-                     )
+        logger.error(e)
         return False
