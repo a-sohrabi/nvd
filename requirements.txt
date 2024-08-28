@@ -15,4 +15,5 @@ markdown2
 python-json-logger
 pytz
 tenacity
+python-logging-loki
 git+https://github.com/ahmetoner/fastapi-offline-swagger-ui
