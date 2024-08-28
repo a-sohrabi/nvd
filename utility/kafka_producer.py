@@ -1,7 +1,9 @@
 from confluent_kafka import Producer
 
 from .config import settings
-from .logger import logger
+from .logger import LogManager
+
+logger = LogManager('kafka_producer.py')
 
 
 class KafkaProducer:

@@ -11,8 +11,10 @@ from pymongo.errors import BulkWriteError
 
 from .database import vulnerability_collection
 from .kafka_producer import producer
-from .logger import logger
+from .logger import LogManager
 from .schemas import VulnerabilityResponse, VulnerabilityCreate
+
+logger = LogManager('crud.py')
 
 tehran_tz = pytz.timezone('Asia/Tehran')
 
@@ -63,10 +65,10 @@ async def bulk_create_or_update_vulnerabilities(vulnerabilities: List[Vulnerabil
             stats['updated'] += matched_count
 
             for vuln in created_vulnerabilities:
-                producer.add_message('nvd_topic.extract.created', key=str(vuln.cve_id), value=vuln.json())
+                producer.add_message('nvd.extract.created', key=str(vuln.cve_id), value=vuln.json())
 
             for vuln in updated_vulnerabilities:
-                producer.add_message('nvd_topic.extract.updated', key=str(vuln.cve_id), value=vuln.json())
+                producer.add_message('nvd.extract.updated', key=str(vuln.cve_id), value=vuln.json())
 
             producer.flush()
 

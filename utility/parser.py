@@ -5,12 +5,14 @@ from typing import List, AsyncGenerator
 
 import aiofiles
 
-from .logger import logger
+from .logger import LogManager
 from .schemas import VulnerabilityCreate
 
+log_manager = LogManager('parser.py')
 
-async def parse_json_in_batches(json_path: Path, feed_type: str, batch_size: int = 1000) -> AsyncGenerator[
-    List[VulnerabilityCreate], None]:
+
+async def parse_json_in_batches(
+        json_path: Path, feed_type: str, batch_size: int = 1000) -> AsyncGenerator[List[VulnerabilityCreate], None]:
     try:
         async with aiofiles.open(json_path, "r") as json_file:
             data = json.loads(await json_file.read())
@@ -47,7 +49,6 @@ async def parse_json_in_batches(json_path: Path, feed_type: str, batch_size: int
         # Yield the remaining items in the batch
         if batch:
             yield batch
-
-        logger.info(f"JSON parsing completed for {feed_type} feed")
+        log_manager.info(f"JSON parsing completed for {feed_type} feed")
     except Exception as e:
-        logger.error(e)
+        log_manager.error(e)
