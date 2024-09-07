@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -65,14 +66,19 @@ async def update_vulnerabilities(feed_type: str):
 
 
 @router.post("/all")
-async def update_all_vulnerabilities(background_tasks: BackgroundTasks, username: str = Depends(authenticate)):
+async def update_all_vulnerabilities(background_tasks: BackgroundTasks, token: str,
+                                     username: str = Depends(authenticate)):
+    if not token == os.getenv('VERIFICATION_TOKEN'):
+        return {'error': 'Invalid token'}
     background_tasks.add_task(update_vulnerabilities, "yearly")
     return {"message": 'Started updating all vulnerabilities in the background!'}
 
 
 @router.post("/recent")
-async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks,
+async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks, token: str,
                                                      username: str = Depends(authenticate)):
+    if not token == os.getenv('VERIFICATION_TOKEN'):
+        return {'error': 'Invalid token'}
     background_tasks.add_task(update_vulnerabilities, "recent")
     background_tasks.add_task(update_vulnerabilities, "modified")
     return {"message": 'Started updating recent and modified vulnerabilities in the background!'}
