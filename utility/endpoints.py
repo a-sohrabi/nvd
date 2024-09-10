@@ -4,10 +4,9 @@ from datetime import datetime
 from pathlib import Path
 
 import markdown2
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from .auth import authenticate
 from .config import settings
 from .crud import reset_stats, get_stats, record_stats, read_version_file, \
     read_markdown_file, get_vulnerability, bulk_create_or_update_vulnerabilities
@@ -66,8 +65,7 @@ async def update_vulnerabilities(feed_type: str):
 
 
 @router.post("/all")
-async def update_all_vulnerabilities(background_tasks: BackgroundTasks, token: str,
-                                     username: str = Depends(authenticate)):
+async def update_all_vulnerabilities(background_tasks: BackgroundTasks, token: str):
     if not token == os.getenv('VERIFICATION_TOKEN'):
         return {'error': 'Invalid token'}
     background_tasks.add_task(update_vulnerabilities, "yearly")
@@ -75,8 +73,7 @@ async def update_all_vulnerabilities(background_tasks: BackgroundTasks, token: s
 
 
 @router.post("/recent")
-async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks, token: str,
-                                                     username: str = Depends(authenticate)):
+async def update_recent_and_modified_vulnerabilities(background_tasks: BackgroundTasks, token: str):
     if not token == os.getenv('VERIFICATION_TOKEN'):
         return {'error': 'Invalid token'}
     background_tasks.add_task(update_vulnerabilities, "recent")
@@ -85,12 +82,12 @@ async def update_recent_and_modified_vulnerabilities(background_tasks: Backgroun
 
 
 @router.get("/stats")
-async def get_vulnerabilities_stats(username: str = Depends(authenticate)):
+async def get_vulnerabilities_stats():
     return await get_stats()
 
 
 @router.get("/health_check")
-async def check_health(username: str = Depends(authenticate)):
+async def check_health():
     mongo_status = await check_mongo()
     kafka_status = await check_kafka()
     nvd_status = await check_url(settings.NVD_MODIFIED_URL)
@@ -107,7 +104,7 @@ async def check_health(username: str = Depends(authenticate)):
 
 
 @router.get("/version")
-async def get_version(username: str = Depends(authenticate)):
+async def get_version():
     try:
         version = await read_version_file(VERSION_FILE_PATH)
         return {"version": version}
@@ -118,7 +115,7 @@ async def get_version(username: str = Depends(authenticate)):
 
 
 @router.get("/readme", response_class=HTMLResponse)
-async def get_readme(username: str = Depends(authenticate)):
+async def get_readme():
     try:
         content = await read_markdown_file(README_FILE_PATH)
         html_content = markdown2.markdown(content)
@@ -132,7 +129,7 @@ async def get_readme(username: str = Depends(authenticate)):
 
 
 @router.get('/detail/{cve_id}')
-async def get_detail(cve_id: str, username: str = Depends(authenticate)):
+async def get_detail(cve_id: str):
     cve = await get_vulnerability(cve_id)
     if not cve:
         return JSONResponse(status_code=404, content={"message": f'{cve_id} not found'})
